@@ -36,6 +36,50 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(task)
 
+	case http.MethodPut:
+		var updatedTask models.Task
+
+		err := json.NewDecoder(r.Body).Decode(&updatedTask)
+		if err != nil {
+			http.Error(w, "JSON inválido", http.StatusBadRequest)
+			return
+		}
+
+		for i, t := range tasks {
+			if t.ID == updatedTask.ID {
+				tasks[i].Done = updatedTask.Done
+
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(tasks[i])
+				return
+			}
+	
+		}
+
+		http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+
+	case http.MethodDelete:
+		var taskToDelete models.Task
+
+	err := json.NewDecoder(r.Body).Decode(&taskToDelete)
+	if err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	for i, t := range tasks {
+		if t.ID == taskToDelete.ID {
+
+			// remove do slice
+			tasks = append(tasks[:i], tasks[i+1:]...)
+
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+	}
+
+	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+
 	default:
 		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 	}
